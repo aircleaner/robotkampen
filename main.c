@@ -1,34 +1,35 @@
 #define LEFT_MOTOR motorB
 #define RIGHT_MOTOR motorA
 #define SYNC_MOTOR synchAB
-#define DIRECTION -1
+
 #define TURN_LEFT 1
 #define WATER_MOTOR motorC
+
+#define DIRECTION -1
 #define INIT_POWER 50
-#define TICK500MM 240
-#define TICK100MM 48
+#define SLOW_POWER 15
+
+#define TICKTOMM 37
 #define TICK90DEG 234
 
+#pragma config(Sensor, S4,     touchSensor,         sensorTouch)
 #pragma DebuggerWindows("nxtLCDScreen")
 
 #define FORWARD 0
 #define BACKWARD 1
 #define RIGHT 2
 #define LEFT 3
-#define COMMAND_LENGTH 2
+#define FORWARD_TO_STOP 4
+#define SLEEP 5
 
-struct command {
-	int commandType;
-	int length;
-};
+#define COMMAND_LENGTH 3*2
 
-command path[COMMAND_LENGTH] = { {FORWARD, 10}, {BACKWARD, 10} }; // initialize to 1,2,0,0,0...;
-
+int path[COMMAND_LENGTH] = { FORWARD, 100, SLEEP, 200, BACKWARD, 100};
 
 void driveStraightDistance(int centimeter, int masterPower)
 {
 	nSyncedMotors = synchNone;
-  int tickGoal = centimeter * TICK100MM;
+  int tickGoal = centimeter * TICKTOMM;
 
   //This will count up the total encoder ticks despite the fact that the encoders are constantly reset.
   int totalTicks = 0;
@@ -46,7 +47,7 @@ void driveStraightDistance(int centimeter, int masterPower)
   SensorValue[RIGHT_MOTOR] = 0;
 
   //Monitor 'totalTicks', instead of the values of the encoders which are constantly reset.
-  while(abs(totalTicks) < tickGoal)
+  while(abs(totalTicks) < tickGoal /*&& !SensorValue[sensorTouch]*/)
   {
     //Proportional algorithm to keep the robot going straight.
     motor[LEFT_MOTOR] = masterPower;
@@ -85,28 +86,32 @@ void turn45Degree(int turnDirection)
 
 task main()
 {
-	//nSyncedMotors = synchNone;
-  //nSyncedMotors = SYNC_MOTOR;
-  //driveStraightDistance(1000, INIT_POWER * DIRECTION);
-  //turn45Degree(1);
   int i = 0;
-  for (i; i < COMMAND_LENGTH; i++)
+  for (i = 0; i < COMMAND_LENGTH; i += 2)
   {
-  	if (path[i].commandType == FORWARD)
-  	{
-  		driveStraightDistance(path[i].length, INIT_POWER * DIRECTION);
-  	}
-  	else if (path[i].commandType == BACKWARD)
-  	{
-  		driveStraightDistance(path[i].length, INIT_POWER * -DIRECTION);
-  	}
-  	else if (path[i].commandType == RIGHT)
-  	{
-  		turn45Degree(-TURN_LEFT);
-  	}
-  	else if (path[i].commandType == LEFT)
-  	{
-  		turn45Degree(TURN_LEFT);
-  	}
+  	switch (path[i])
+    {
+    case FORWARD:
+  		driveStraightDistance(path[i+1], INIT_POWER * DIRECTION);
+      break;
+    case BACKWARD:
+  		driveStraightDistance(path[i+1], INIT_POWER * -DIRECTION);
+      break;
+    case RIGHT:
+      turn45Degree(-TURN_LEFT);
+      break;
+    case LEFT:
+    	turn45Degree(TURN_LEFT);
+    	break;
+    case FORWARD_TO_STOP:
+  		driveStraightDistance(path[i+1], SLOW_POWER * DIRECTION);
+    	break;
+    case SLEEP:
+    	wait1Msec(path[i+1]);
+    	break;
+    default:
+      displayTextLine(4, "BAD COMMAND!");
+      break;
+    }
   }
 }
