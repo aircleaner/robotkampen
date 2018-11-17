@@ -12,6 +12,8 @@
 #define TICKTOMM 37
 #define TICK90DEG 234
 
+#define MOVE_WATER_MOTOR 75
+
 #pragma config(Sensor, S4,     touchSensor,         sensorTouch)
 #pragma DebuggerWindows("nxtLCDScreen")
 
@@ -21,10 +23,14 @@
 #define LEFT 3
 #define FORWARD_TO_STOP 4
 #define SLEEP 5
+#define FLIP 6
 
-#define COMMAND_LENGTH 3*2
+#define COMMAND_LENGTH 12*2
 
-int path[COMMAND_LENGTH] = { FORWARD, 100, SLEEP, 200, BACKWARD, 100};
+//int path[COMMAND_LENGTH] = { FLIP, 300};
+int path[COMMAND_LENGTH] = { FORWARD, 580, FLIP, 0,
+	BACKWARD, 160, RIGHT, 0, FORWARD, 590-220, FLIP, 0,
+	BACKWARD, 590-220, RIGHT, 0, FORWARD, 150, LEFT, 0, FORWARD, 1050-260, RIGHT, 450}
 
 void driveStraightDistance(int centimeter, int masterPower)
 {
@@ -84,8 +90,21 @@ void turn45Degree(int turnDirection)
 	motor[RIGHT_MOTOR] = 0;
 }
 
+void flip()
+{
+	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
+	motor[WATER_MOTOR] = -10;
+	wait1Msec(2000);
+	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
+	motor[WATER_MOTOR] = 10;
+	wait1Msec(2000);
+}
+
 task main()
 {
+	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
+	motor[WATER_MOTOR] = 10;
+	wait1Msec(2000);
   int i = 0;
   for (i = 0; i < COMMAND_LENGTH; i += 2)
   {
@@ -106,6 +125,9 @@ task main()
     case FORWARD_TO_STOP:
   		driveStraightDistance(path[i+1], SLOW_POWER * DIRECTION);
     	break;
+    case FLIP:
+    	flip();
+    	break;
     case SLEEP:
     	wait1Msec(path[i+1]);
     	break;
@@ -113,5 +135,10 @@ task main()
       displayTextLine(4, "BAD COMMAND!");
       break;
     }
+    wait1Msec(500);
+  }
+  while(true)
+  {
+  	wait1Msec(100);
   }
 }
