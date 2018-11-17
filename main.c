@@ -1,16 +1,28 @@
 #define LEFT_MOTOR motorB
 #define RIGHT_MOTOR motorA
 #define SYNC_MOTOR synchAB
-#define FORWARD -1
+#define DIRECTION -1
+#define TURN_LEFT 1
 #define WATER_MOTOR motorC
-#define INIT_POWER 30
+#define INIT_POWER 50
 #define TICK500MM 240
 #define TICK100MM 48
 #define TICK90DEG 234
 
 #pragma DebuggerWindows("nxtLCDScreen")
 
-int path[100];
+#define FORWARD 0
+#define BACKWARD 1
+#define RIGHT 2
+#define LEFT 3
+#define COMMAND_LENGTH 2
+
+struct command {
+	int commandType;
+	int length;
+};
+
+command path[COMMAND_LENGTH] = { {FORWARD, 10}, {BACKWARD, 10} }; // initialize to 1,2,0,0,0...;
 
 
 void driveStraightDistance(int centimeter, int masterPower)
@@ -56,26 +68,6 @@ void driveStraightDistance(int centimeter, int masterPower)
   motor[RIGHT_MOTOR] = 0;
 }
 
-int driveForward(int ticks)
-{
-	nSyncedMotors = SYNC_MOTOR;
-  nSyncedTurnRatio = +100;              // move in a straight line
-
-  nMotorEncoder[RIGHT_MOTOR] = 0;
-	nMotorEncoderTarget[RIGHT_MOTOR] = ticks;
-
-  motor[RIGHT_MOTOR] = INIT_POWER * FORWARD;
-  //motor[LEFT_MOTOR] = INIT_POWER * FORWARD;
-
-	while(nMotorRunState[RIGHT_MOTOR] != runStateIdle)  // while Motor B is still running:
-	{
-  	// Do nothing
-	}
-	motor[RIGHT_MOTOR] = 0;
-	//motor[LEFT_MOTOR] = 0;
-	return nMotorEncoder[RIGHT_MOTOR];
-}
-
 void turn45Degree(int turnDirection)
 {
 	nSyncedMotors = SYNC_MOTOR;
@@ -95,6 +87,26 @@ task main()
 {
 	//nSyncedMotors = synchNone;
   //nSyncedMotors = SYNC_MOTOR;
-  driveStraightDistance(1000, INIT_POWER * FORWARD);
+  //driveStraightDistance(1000, INIT_POWER * DIRECTION);
   //turn45Degree(1);
+  int i = 0;
+  for (i; i < COMMAND_LENGTH; i++)
+  {
+  	if (path[i].commandType == FORWARD)
+  	{
+  		driveStraightDistance(path[i].length, INIT_POWER * DIRECTION);
+  	}
+  	else if (path[i].commandType == BACKWARD)
+  	{
+  		driveStraightDistance(path[i].length, INIT_POWER * -DIRECTION);
+  	}
+  	else if (path[i].commandType == RIGHT)
+  	{
+  		turn45Degree(-TURN_LEFT);
+  	}
+  	else if (path[i].commandType == LEFT)
+  	{
+  		turn45Degree(TURN_LEFT);
+  	}
+  }
 }
