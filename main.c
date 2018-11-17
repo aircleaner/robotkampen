@@ -30,7 +30,7 @@
 //int path[COMMAND_LENGTH] = { FLIP, 300};
 int path[COMMAND_LENGTH] = { FORWARD, 580, FLIP, 0,
 	BACKWARD, 160, RIGHT, 0, FORWARD, 590-220, FLIP, 0,
-	BACKWARD, 590-220, RIGHT, 0, FORWARD, 150, LEFT, 0, FORWARD, 1050-260, RIGHT, 450}
+	BACKWARD, 590-220, RIGHT, 0, FORWARD, 150, LEFT, 0, FORWARD, 1050-260, RIGHT, 450};
 
 void driveStraightDistance(int centimeter, int masterPower)
 {
@@ -93,18 +93,18 @@ void turn45Degree(int turnDirection)
 void flip()
 {
 	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
-	motor[WATER_MOTOR] = -10;
+	motor[WATER_MOTOR] = 10;
 	wait1Msec(2000);
 	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
-	motor[WATER_MOTOR] = 10;
+	motor[WATER_MOTOR] = -10;
 	wait1Msec(2000);
 }
 
 task main()
 {
-	nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
-	motor[WATER_MOTOR] = 10;
-	wait1Msec(2000);
+	//nMotorEncoderTarget[WATER_MOTOR] = MOVE_WATER_MOTOR;
+	//motor[WATER_MOTOR] = 10;
+	//wait1Msec(2000);
   int i = 0;
   for (i = 0; i < COMMAND_LENGTH; i += 2)
   {
